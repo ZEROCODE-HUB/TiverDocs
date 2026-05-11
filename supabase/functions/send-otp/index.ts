@@ -270,7 +270,6 @@ Deno.serve(async (req) => {
       JSON.stringify({
         ok: true,
         inserted: inserted?.[0] || null,
-        codeReturnedForDev: code,
       }),
       { status: 200, headers },
     );
