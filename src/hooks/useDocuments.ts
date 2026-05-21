@@ -238,7 +238,10 @@ export const useDocuments = (
     documentId?: string,
   ) => {
     try {
-      const blob = await documentService.downloadDocument(filePath);
+      const signedUrl = await documentService.getSignedUrl(filePath, 120);
+      const res = await fetch(signedUrl);
+      if (!res.ok) throw new Error("No se pudo descargar el archivo");
+      const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
