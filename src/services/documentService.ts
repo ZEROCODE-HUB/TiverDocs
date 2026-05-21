@@ -259,6 +259,16 @@ export const documentService = {
     return data.publicUrl;
   },
 
+  async getSignedUrl(filePath: string, expiresInSeconds: number = 120): Promise<string> {
+    const { data, error } = await supabase.storage
+      .from("documents")
+      .createSignedUrl(filePath, expiresInSeconds);
+
+    if (error) throw error;
+
+    return (data && (data as any).signedUrl) || "";
+  },
+
   async updateDocument(
     documentId: string,
     updates: Partial<DocumentData>,
