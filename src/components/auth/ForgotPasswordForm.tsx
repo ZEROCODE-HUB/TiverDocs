@@ -1,27 +1,41 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Mail, ArrowLeft, CheckCircle } from "lucide-react";
+import HCaptcha from "@hcaptcha/react-hcaptcha";
+import { useToast } from "@/hooks/use-toast";
 
 interface ForgotPasswordFormProps {
   onBack: () => void;
-  onSubmit: (email: string) => void;
+  onSubmit: (email: string, captchaToken: string) => void;
 }
 
 export const ForgotPasswordForm = ({ onBack, onSubmit }: ForgotPasswordFormProps) => {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const captcha = useRef<HCaptcha>(null);
+  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
 
+    if (!captchaToken) {
+      toast({
+        title: "Verificación requerida",
+        description: "Por favor completa la verificación del CAPTCHA para continuar.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
-      await onSubmit(email);
+      await onSubmit(email, captchaToken);
       setIsSubmitted(true);
     } finally {
       setIsLoading(false);
@@ -84,7 +98,19 @@ export const ForgotPasswordForm = ({ onBack, onSubmit }: ForgotPasswordFormProps
               className="bg-background/50"
             />
           </div>
-          
+
+          <div className="flex flex-col items-center gap-2 mt-4 min-h-[78px]">
+            <HCaptcha
+              ref={captcha}
+              sitekey={
+                import.meta.env.VITE_HCAPTCHA_SITE_KEY ||
+                "10000000-ffff-ffff-ffff-000000000001"
+              }
+              onVerify={(token) => setCaptchaToken(token)}
+              onExpire={() => setCaptchaToken(null)}
+            />
+          </div>
+
           <div className="flex gap-2">
             <Button
               type="button"
@@ -99,7 +125,7 @@ export const ForgotPasswordForm = ({ onBack, onSubmit }: ForgotPasswordFormProps
             <Button
               type="submit"
               className="flex-1 bg-gradient-primary hover:opacity-90 transition-opacity"
-              disabled={isLoading || !email}
+              disabled={isLoading || !email || !captchaToken}
             >
               {isLoading ? "Enviando..." : "Enviar Enlace"}
             </Button>
