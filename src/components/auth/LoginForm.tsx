@@ -214,10 +214,11 @@ export const LoginForm = ({ onLogin, onForgotPassword }: LoginFormProps) => {
     }
   };
 
-  const handleForgotPassword = async (email: string) => {
+  const handleForgotPassword = async (email: string, captchaToken: string) => {
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/reset-password`,
+        captchaToken,
       });
 
       if (error) throw error;
